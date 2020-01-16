@@ -1,0 +1,34 @@
+#!/sbin/openrc-run
+
+cmd=/usr/bin/droid/droid-hal-startup.sh
+cmd_args=""
+pid=/run/droid-hal-init.pid
+
+depend() {
+        after bootmisc usb-tethering
+}
+
+start() {
+        ebegin "Starting droid-hal-init"
+        start-stop-daemon --start --exec $cmd --background \
+                --pidfile $pid --make-pidfile -- $cmd_args
+        sleep 5
+
+        # A hack to prevent black screen in Xorg
+        EGL_PLATFORM=hwcomposer test_hwc2 &
+        PID=$!
+        sleep 1
+        kill $PID || true
+
+        eend $?
+}
+
+stop() {
+        ebegin "Stopping droid-hal-init"
+        start-stop-daemon --stop --exec $cmd
+        eend $?
+}
+
+restart() {
+        eerror "droid-hal-init should be never restarted"
+}

@@ -1,0 +1,51 @@
+{{- $architecture := or .architecture "arm64" -}}
+{{- $image := or .image "maemo-leste-fxtec-pro1.tar.gz" -}}
+
+architecture: {{ $architecture }}
+actions:
+  - action: download
+    description: Download latest ubuntu touch rootfs from CI
+    url: "https://maedevu.maemo.org/images/arm64-generic/20200114/maemo-leste-1.0-arm64-raspi3-20200114.tar.gz"
+    unpack: false
+    filename: maemo-leste-rootfs.tar.gz
+    name: maemo-leste-rootfs.tar.gz
+
+  - action: unpack
+    description: Unpacking rootfs
+    origin: maemo-leste-rootfs.tar.gz
+    compression: gz
+
+  - action: overlay
+    source: overlay
+    description: Adding device-specific overlay
+    destination: /
+
+  - action: overlay
+    source: prebuilt
+    description: Copying prebuilt Debian packages
+    destination: /var/tmp/prebuilt
+
+  - action: run
+    chroot: true
+    description: Adding device-specific packages
+    script: scripts/install-packages.sh
+
+  - action: run
+    chroot: true
+    description: Create directories for Android mounts
+    command: mkdir -p /data /system /system_root /vendor /mnt/vendor/persist
+
+  - action: run
+    chroot: true
+    description: Enable SSH and USB network to have a chance to debug anything going wrong on device
+    command: ssh-keygen -A && rc-update add usb-tethering sysinit && rc-update add ssh sysinit
+
+  - action: run
+    chroot: true
+    description: Setting password 'user' on default user
+    command: echo user:user | chpasswd
+
+  - action: pack
+    description: Compressing image
+    file: {{ $image }}
+    compression: gz

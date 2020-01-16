@@ -1,0 +1,26 @@
+#<file system>  <mount point>  <type>  <options>            <dump> <pass>
+# This file defines mount points that are expected by Android 9.0
+# libhybris-based adaptation; its contents should be appended to device's
+# default /etc/fstab file (see postmarketos-base).
+
+# Android device-specific mount points:
+#<src>  <mnt_point>     <type>  <mnt_flags and options> <fs_mgr_flags>
+
+# system/vendor
+/dev/disk/by-partlabel/system_a   /system_root ext4 ro,barrier=1,discard   0 0
+/dev/disk/by-partlabel/vendor_a   /vendor ext4 ro,discard,barrier=1        0 0
+
+# Overlay /usr/libexec/droid-hybris/system on top of device's /system partition contents
+overlay /system overlay lowerdir=/usr/libexec/droid-hybris/system:/system_root/system   0 0
+overlay /vendor overlay lowerdir=/usr/libexec/droid-hybris/vendor:/vendor   0 0
+
+# Device SoC specific partitions
+/dev/disk/by-partlabel/modem_a      /vendor/firmware_mnt    vfat   ro,shortname=lower,uid=0,gid=1000,dmask=227,fmask=337     0 0
+/dev/disk/by-partlabel/bluetooth_a  /vendor/bt_firmware     vfat   ro,shortname=lower,uid=1002,gid=3002,dmask=227,fmask=337  0 0
+/dev/disk/by-partlabel/dsp_a        /vendor/dsp             ext4   ro,nosuid,nodev,barrier=1                                 0 0
+/dev/disk/by-partlabel/persist      /mnt/vendor/persist     ext4   noatime,nosuid,nodev,barrier=1                            0 0
+
+# Required cgroup mounts
+#none   /dev/cpuctl     cgroup rw,nosuid,nodev,noexec,relatime,cpu      0 0
+#none   /dev/cpuset     cgroup rw,nosuid,nodev,noexec,relatime,cpuset,noprefix,release_agent=/sbin/cpuset_release_agent       0 0
+#none   /dev/stune      cgroup rw,nosuid,nodev,noexec,relatime,schedtune        0 0
